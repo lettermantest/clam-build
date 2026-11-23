@@ -2,7 +2,7 @@
 
 A native Windows desktop coding agent — one `.exe`, minimal and themeable, no Python or terminal required.
 
-`dist-cpp\Clam Build.exe` (3.4 MB, no installer, no runtime dependencies)
+[Download the latest Windows build](https://github.com/lettermantest/clam-build/releases/latest) — 3.4 MB, no installer, no runtime dependencies.
 
 ---
 
