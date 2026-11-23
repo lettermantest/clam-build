@@ -1,58 +1,51 @@
 # Clam Build
 
-A native Windows desktop coding agent — one `.exe`, minimal and themeable, no Python or terminal required.
+**Ver. 0.1** · A native Windows coding agent in one small executable.
 
-[Download the latest Windows build](https://github.com/lettermantest/clam-build/releases/latest) — 3.4 MB, no installer, no runtime dependencies.
+[Website](https://lettermantest.github.io/clam-build/) · [Download](https://github.com/lettermantest/clam-build/releases/latest) · [Source](https://github.com/lettermantest/clam-build)
+
+Clam Build is a desktop coding agent for Windows. Point it at a project, describe the outcome, and it reads, edits, runs, and verifies the work. It is built directly against Win32 and C++20 — no Electron, no Python, and no terminal required.
+
+![Clam Build chat interface](docs/assets/chat.png)
 
 ---
 
-## What the screenshot showed
+## Ver. 0.1
 
-`(empty response)` was a real bug, now fixed.
-
-**Cause:** reasoning models sometimes return a message whose visible `content` is empty while all the text goes into `reasoning_content`. Worse, that empty assistant turn was appended to conversation history, and once an empty assistant message is in history the model refuses to answer — so every later turn also came back blank. That is why "ok so do it" produced nothing.
-
-**Fix (three layers):**
-
-1. **History sanitization** — empty assistant turns are dropped before every request, and empty tool results become `(tool returned no output)`.
-2. **Staged recovery** — if a reply has no visible text, Clam retries automatically: normal retry → retry without tools → retry with double the token budget. If everything still fails it shows the model's reasoning text rather than a blank bubble, or a clear error telling you to lower Effort or switch models.
-3. **Network retries** — transient socket/DNS errors, 429s and 5xx responses retry up to 3 times instead of silently failing.
-
-Verified against the live API with the exact poisoned-history case from your screenshot: returns a full answer instead of nothing.
+This is an early public preview. The core agent loop, native UI, saved chats, themes, image input, and board tools are working; expect rough edges. The executable is unsigned, so Windows SmartScreen may show a warning. Build from source if you prefer.
 
 ---
 
 ## Using it
 
-Run `Clam Build.exe` from anywhere. Settings and your API key live in `%APPDATA%\clam`, so the exe is portable.
+Run `Clam Build.exe` from anywhere. Settings and your API key live in `%APPDATA%\clam`, not next to the executable.
 
-1. **Settings** → paste your NVIDIA API key → Save. Stored with Windows DPAPI.
+1. **Settings** → paste your NVIDIA API key → Save. The key is encrypted with Windows DPAPI.
 2. **Settings** → Project folder → Browse / Open.
-3. Type in the composer, press **Enter** to send (**Shift+Enter** for a newline).
+3. Type in the composer and press **Enter** to send. **Shift+Enter** inserts a newline.
 
 ### Interface
 
 | Area | Notes |
 |---|---|
-| **Chat** | Assistant replies in cards, your messages right-aligned. Tool calls never clutter the transcript. |
-| **Activity** | Collapsed rows like `▸ file change · Wrote index.html` — click to expand the full output. |
-| **Settings** | API key, project folder, model list, reasoning effort, permissions, plugins. |
-| Header | Segoe UI wordmark, rounded pill tabs, then quiet text chips — model, effort, permissions, New chat. |
-| Sidebar | Saved-chat rail. It hides one second after the pointer leaves it; hover the slim left-edge grip to bring it back. Hover a tile for the full title/project/age, and scroll the rail with the mouse wheel. |
+| **Chat** | Assistant replies in cards, your messages right-aligned. Tool calls stay out of the transcript. |
+| **Activity** | Collapsed rows like `▸ file change · Wrote index.html`. Click to expand the full output. |
+| **Settings** | API key, project folder, model list, reasoning effort, permissions, and plugins. |
+| Header | Wordmark, rounded pill tabs, then quiet text chips for model, effort, permissions, and New chat. |
+| Sidebar | Saved-chat rail. It hides one second after the pointer leaves it; hover the slim left-edge grip to bring it back. Hover a tile for the full title, project, and age. |
+| Shortcuts | **Ctrl+1/2/3** switch Chat/Activity/Settings · **Ctrl+V** pastes a screenshot · **Ctrl+N** new chat · **Esc** cancels a running turn. |
 
-Every conversation is saved as a JSON file in `%APPDATA%\clam\chats` after each message or tool step, so saved chats reappear in the sidebar after a restart. Select a tile to reopen it; the active conversation is restored on launch.
+Every conversation is saved as a JSON file in `%APPDATA%\clam\chats` after each message or tool step. Saved chats reappear in the rail after a restart; the active conversation is restored on launch.
 
-The model chooser is an overlay popup: click the model name in the header (or the field in Settings). Navigate with **↑/↓**, **PgUp/PgDn**, **Home/End**, or the mouse wheel; **Enter** selects, **Esc** or clicking outside closes it. Vision-capable models are marked `◉`. Your choice saves immediately and is restored next launch.
-
-Keyboard: **Ctrl+1/2/3** switch Chat/Activity/Settings, **Ctrl+V** pastes a clipboard screenshot, **Ctrl+N** new chat, **Esc** cancels a running turn.
+The model chooser is an overlay popup. Open it from the model name in the header or the field in Settings. Navigate with **↑/↓**, **PgUp/PgDn**, **Home/End**, or the mouse wheel; **Enter** selects, **Esc** or clicking outside closes it. Vision-capable models are marked `◉`.
 
 ### Images
 
-Copy a screenshot and press **Ctrl+V** (or click Paste). Up to 10 per message, shown as chips in the composer and sent as `[image 1]`, `[image 2]`… You can also drag image files onto the window.
+Copy a screenshot and press **Ctrl+V**, or click Paste. Up to 10 images per message, shown as chips in the composer and sent as `[image 1]`, `[image 2]`… You can also drag image files onto the window.
 
 ### Models and effort
 
-The model list contains every code-capable NVIDIA NIM model available to your key (58 on this machine), hiding embedding, rerank, detector, speech, image-generation and other non-coding endpoints.
+The chooser lists the code-capable NVIDIA NIM models available to your key, hiding embedding, rerank, detector, speech, image-generation, and other non-coding endpoints.
 
 Effort levels map to reasoning budget:
 
@@ -63,11 +56,11 @@ Effort levels map to reasoning budget:
 | high | 8192 | high |
 | max | 16384 | high |
 
-**If a reply ever comes back blank, set effort to `low`** — reasoning models that spend a whole budget thinking are the usual culprit.
+If a reply comes back blank, set effort to `low` — reasoning models that spend the whole budget thinking are the usual cause.
 
 ### Permissions
 
-Defaults to **Allow all**: commands and file writes run without prompting. Click the permission chip (or `● Allow all` in the header) to switch to **Manual**, which asks before run commands and overwrites.
+Defaults to **Allow all**: commands and file writes run without prompting. Click the permission chip in the header, or the control in Settings, to switch to **Manual**, which asks before run commands and file overwrites.
 
 ---
 
@@ -82,19 +75,33 @@ The agent has 14 tools:
 | `web_search` / `fetch_url` | Search and read documentation |
 | `visual_test` / `view_image` | Headless Chrome screenshot, attach images |
 | `system_info` | OS, CPU, RAM, GPU, serial ports |
-| `arduino_boards` / `arduino_upload` / `arduino_setup` / `serial_read` | ESP32 and Arduino boards via arduino-cli |
+| `arduino_boards` / `arduino_upload` / `arduino_setup` / `serial_read` | ESP32 and Arduino boards via `arduino-cli` |
 
 ---
 
-## Plugins
+## Reliability
 
-Drop `.luau` scripts in `%APPDATA%\clam\plugins`. Each declares a name, description and handler; loaded plugins appear in Settings → Plugins.
+Reasoning models can occasionally return an empty visible message while putting all the text in a reasoning field. An empty assistant turn in history can then make later turns come back blank too.
+
+Clam handles this in three layers:
+
+1. **History sanitization** — empty assistant turns are dropped before every request, and empty tool results become `(tool returned no output)`.
+2. **Staged recovery** — a reply with no visible text is retried normally, then without tools, then with double the token budget. If all attempts fail, Clam shows the model's reasoning text rather than an empty bubble, or a clear error suggesting a lower effort or a different model.
+3. **Network retries** — transient socket/DNS errors, 429s, and 5xx responses retry up to 3 times.
+
+---
+
+## Screenshots
+
+| Activity | Settings |
+|---|---|
+| ![Activity tab](docs/assets/activity.png) | ![Settings and themes](docs/assets/settings.png) |
 
 ---
 
 ## Building from source
 
-Requires a C++20 compiler. Tested with MinGW-w64 GCC 16.2:
+Requires a C++20 compiler. Tested with MinGW-w64 GCC 16.2 on Windows.
 
 ```powershell
 cd cpp
@@ -107,7 +114,7 @@ g++ -std=c++20 -O2 -municode -DUNICODE -D_UNICODE `
     -static -static-libgcc -static-libstdc++
 ```
 
-No third-party libraries: JSON parsing, HTTPS (WinHTTP), DPAPI, and the entire UI are written against the Win32 API. Total ~5,100 lines across 6 translation units.
+No third-party libraries: JSON parsing, HTTPS (WinHTTP), DPAPI, and the entire UI are written against the Win32 API. Roughly 5,900 lines across six translation units.
 
 ### Source layout
 
@@ -122,12 +129,20 @@ No third-party libraries: JSON parsing, HTTPS (WinHTTP), DPAPI, and the entire U
 
 ---
 
+## Plugins
+
+Drop `.luau` scripts in `%APPDATA%\clam\plugins`. Each declares a name, description, and handler; loaded plugins appear in Settings → Plugins.
+
+---
+
 ## Troubleshooting
 
 **Blank reply** — set Effort to `low`, or pick another model.
 
-**"Add your NVIDIA API key in Settings"** — paste the key and press Save. Keys from the earlier Python build are read automatically (hex DPAPI + UTF-16 decoding handled).
+**"Add your NVIDIA API key in Settings"** — paste the key and press Save. Keys stored by older Clam builds are read automatically.
 
 **Model list empty** — click Refresh in Settings; it needs a valid key and network access.
 
 **Arduino upload fails** — install `arduino-cli` and the board core (`arduino-cli core install esp32:esp32`).
+
+**SmartScreen warning** — the preview executable is unsigned. Use "More info → Run anyway", or build from source.

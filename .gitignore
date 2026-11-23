@@ -8,8 +8,8 @@ dist-cpp/
 *.ilk
 
 # Local test assets
-*.bmp
-*.png
+/*.bmp
+/*.png
 
 # Editor / OS
 .DS_Store

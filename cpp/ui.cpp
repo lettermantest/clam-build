@@ -3358,7 +3358,7 @@ int RunClamBuildApp(HINSTANCE instance, int show_command) {
     wc.hbrBackground = CreateSolidBrush(kBg);
     RegisterClassExW(&wc);
 
-    state.window = CreateWindowExW(WS_EX_ACCEPTFILES, L"ClamBuildWindow", L"Clam Build",
+    state.window = CreateWindowExW(WS_EX_ACCEPTFILES, L"ClamBuildWindow", L"Clam Build - Ver. 0.1",
                                    WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 1200, 860,
                                    nullptr, nullptr, instance, nullptr);
     if (!state.window) return 1;
